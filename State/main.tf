@@ -33,7 +33,7 @@ resource "random_string" "suffix" {
 # Resource Group for Terraform State
 resource "azurerm_resource_group" "rg_terraform_state" {
   location = var.location
-  name     = "${var.resource_group_name_prefix}-tfstate"
+  name     = var.resource_group_name
   tags     = var.tags
 }
 
