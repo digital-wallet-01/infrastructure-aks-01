@@ -24,3 +24,4 @@ terraform.rc
 *.hcl
 State/aks-backend-config.txt
 State/connections-backend-config.txt
+*.plan

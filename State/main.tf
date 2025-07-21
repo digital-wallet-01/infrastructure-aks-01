@@ -6,7 +6,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 2.0"
+      version = "~> 3.0" # Use a modern version for azurerm provider
     }
   }
 }
@@ -19,89 +19,47 @@ provider "azurerm" {
   features {}
 }
 
-
 ##################################################################################
 # RESOURCES
 ##################################################################################
-resource "random_integer" "strg-name" {
-  min = 10000
-  max = 99999
+
+# Generate a random suffix for globally unique names
+resource "random_string" "suffix" {
+  length  = 5
+  special = false
+  upper   = false
 }
 
-resource "azurerm_resource_group" "rg-terraform-state-01" {
+# Resource Group for Terraform State
+resource "azurerm_resource_group" "rg_terraform_state" {
   location = var.location
-  name     = var.resource_group_name
+  name     = "${var.resource_group_name_prefix}-tfstate"
   tags     = var.tags
-
 }
 
-resource "azurerm_storage_account" "terraform-state-storage" {
-  account_replication_type = var.account_replication_type
-  account_tier             = var.account_tier
+# Storage Account for Terraform State
+resource "azurerm_storage_account" "terraform_state_storage" {
+  name                     = "tfstate${random_string.suffix.result}" # Globally unique name
+  resource_group_name      = azurerm_resource_group.rg_terraform_state.name
   location                 = var.location
-  name                     = "${var.naming_prefix}${random_integer.strg-name.result}"
-  resource_group_name      = azurerm_resource_group.rg-terraform-state-01.name
+  account_tier             = var.storage_account_tier
+  account_replication_type = var.storage_account_replication_type
   tags                     = var.tags
 
-}
-
-##################################################################################
-# CONTAINER FOR AKS RESOURCES STATE
-##################################################################################
-resource "azurerm_storage_container" "terraform-aks-state" {
-  name = var.aks_state_container_name
-
-  storage_account_name = azurerm_storage_account.terraform-state-storage.name
-}
-
-
-##################################################################################
-# SAS TOKEN FOR AKS STATE CONTAINER
-##################################################################################
-data "azurerm_storage_account_sas" "aks_state" {
-  connection_string = azurerm_storage_account.terraform-state-storage.primary_connection_string
-  https_only        = true
-
-  resource_types {
-    service   = true
-    container = true
-    object    = true
+  # Best practice: Enable blob soft delete to prevent accidental deletion
+  blob_properties {
+    delete_retention_policy {
+      days = var.blob_soft_delete_retention_days
+    }
   }
 
-  services {
-    blob  = true
-    queue = false
-    table = false
-    file  = false
-  }
-
-  start = timestamp()
-  expiry = timeadd(timestamp(), "17520h")
-
-  permissions {
-    read    = true
-    write   = true
-    delete  = true
-    list    = true
-    add     = true
-    create  = true
-    update  = false
-    process = false
-  }
+  # Best practice: Enforce HTTPS only
+  https_traffic_only_enabled = var.storage_account_https_only
 }
 
-##################################################################################
-# LOCAL FILE TO OUTPUT SAS TOKENS
-##################################################################################
-resource "local_file" "post-config-ajs" {
-  depends_on = [azurerm_storage_container.terraform-aks-state]
-
-  filename = "${path.module}/aks-backend-config.txt"
-  content  = <<EOF
-storage_account_name = "${azurerm_storage_account.terraform-state-storage.name}"
-container_name = "terraform-aks-state"
-key = "aks.tfstate"
-sas_token = "${data.azurerm_storage_account_sas.aks_state.sas}"
-EOF
-}
-
+# Container for AKS Resources State
+resource "azurerm_storage_container" "terraform_aks_state_container" {
+  name                  = var.aks_state_container_name
+  storage_account_name  = azurerm_storage_account.terraform_state_storage.name
+  container_access_type = var.container_access_type
+ }

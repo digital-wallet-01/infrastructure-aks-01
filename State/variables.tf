@@ -18,11 +18,12 @@ variable "naming_prefix" {
 }
 
 variable "tags" {
-  type        = map(string)
   description = "A map of tags to assign to the resources."
+  type        = map(string)
   default = {
-    environment = "SG-testing"
-    owner       = "fad@conscia.com"
+    Environment = "Test"
+    Project     = "AKS-Deployment"
+    ManagedBy   = "Terraform"
   }
 }
 
@@ -38,9 +39,43 @@ variable "account_tier" {
   description = "The performance tier for the storage account."
 }
 
+variable "resource_group_name_prefix" {
+  description = "Prefix for the resource group name for Terraform state."
+  type        = string
+  default     = "myorg" # Customize this prefix
+}
 
 variable "aks_state_container_name" {
+  description = "Name of the blob container for AKS Terraform state."
   type        = string
-  default     = "terraform-aks-state-container"
-  description = "The name of the container for the aks Terraform state."
+  default     = "aks-tfstate" # Customize this container name
+}
+
+variable "container_access_type" {
+  description = "Access type for the storage container."
+  type        = string
+  default     = "private"
+}
+
+variable "storage_account_https_only" {
+  description = "Enforce HTTPS only traffic for the storage account."
+  type        = bool
+  default     = true
+}
+variable "storage_account_tier" {
+  description = "The tier of the storage account (e.g., Standard, Premium)."
+  type        = string
+  default     = "Standard"
+}
+
+variable "storage_account_replication_type" {
+  description = "The replication type of the storage account (e.g., LRS, GRS, ZRS)."
+  type        = string
+  default     = "LRS"
+}
+
+variable "blob_soft_delete_retention_days" {
+  description = "Number of days to retain deleted blobs for soft delete."
+  type        = number
+  default     = 7
 }
