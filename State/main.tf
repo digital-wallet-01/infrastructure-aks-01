@@ -39,21 +39,17 @@ resource "azurerm_resource_group" "rg_terraform_state" {
 
 # Storage Account for Terraform State
 resource "azurerm_storage_account" "terraform_state_storage" {
-  name                     = "tfstate${random_string.suffix.result}" # Globally unique name
+  name = "tfstate${random_string.suffix.result}" # Globally unique name
   resource_group_name      = azurerm_resource_group.rg_terraform_state.name
   location                 = var.location
   account_tier             = var.storage_account_tier
   account_replication_type = var.storage_account_replication_type
   tags                     = var.tags
-
-  # Best practice: Enable blob soft delete to prevent accidental deletion
   blob_properties {
     delete_retention_policy {
       days = var.blob_soft_delete_retention_days
     }
   }
-
-  # Best practice: Enforce HTTPS only
   https_traffic_only_enabled = var.storage_account_https_only
 }
 
@@ -62,4 +58,4 @@ resource "azurerm_storage_container" "terraform_aks_state_container" {
   name                  = var.aks_state_container_name
   storage_account_name  = azurerm_storage_account.terraform_state_storage.name
   container_access_type = var.container_access_type
- }
+}

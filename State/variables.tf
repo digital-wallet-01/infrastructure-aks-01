@@ -39,11 +39,6 @@ variable "account_tier" {
   description = "The performance tier for the storage account."
 }
 
-variable "resource_group_name_prefix" {
-  description = "Prefix for the resource group name for Terraform state."
-  type        = string
-  default     = "myorg" # Customize this prefix
-}
 
 variable "aks_state_container_name" {
   description = "Name of the blob container for AKS Terraform state."

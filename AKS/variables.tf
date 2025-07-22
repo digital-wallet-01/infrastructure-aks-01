@@ -4,7 +4,7 @@
 
 variable "resource_group_name" {
   type    = string
-  default = "rg-aks-testing-01"
+  default = "rg-aks-test-01"
 }
 
 variable "location" {
@@ -12,27 +12,84 @@ variable "location" {
   default = "westeurope"
 }
 
-variable "vnet_address_prefix" {
-  description = "The address prefix for the Virtual Hub."
-  type = list(string)
-  default = ["10.1.0.0/16"]
-}
-
-variable "subnet_address_prefix" {
-  description = "The address prefix for the Virtual Hub."
-  type = list(string)
-  default = ["10.1.1.0/24"]
-}
-
-
-variable "vnet_name" {
+variable "prefix" {
+  description = "A prefix for all resource names to ensure uniqueness and identification."
   type        = string
-  default     = "vnet1"
-  description = "The name of the virtual network."
+  default     = "test"
 }
 
-variable "subnet_name" {
-  type        = string
-  default     = "subnet1"
-  description = "The name of the subnet."
+
+variable "vnet" {
+  description = "Feature of vnet"
+  type = object({ address_space = list(string), name = string })
+  default = {
+    address_space = ["10.0.0.0/8"]
+    name = "aks-vnet-01"
+  }
+}
+
+variable "subnet_node" {
+  description = "Feature of subnet of node"
+  type = object({ address_prefixes = list(string), name = string })
+  default = {
+    address_prefixes = ["10.240.0.0/16"]
+    name = "node-subnet-01"
+  }
+}
+
+variable "aks" {
+  description = "Feature of aks"
+  type = object({
+    name       = string
+    version    = string
+    dns_prefix = string
+    default_node_pool = object({
+      name = optional(string, "default")
+      node_count = optional(number, 3)
+      vm_size = optional(string, "Standard_DS2_v2")
+    })
+  })
+  default = {
+    name       = "aks-test-01"
+    version    = "1.33.0"
+    dns_prefix = "aks-dns-test-01"
+    default_node_pool = {
+      name       = "default"
+      node_count = 3
+      vm_size    = "Standard_DS2_v2"
+    }
+  }
+}
+
+variable "cilium" {
+  description = "Feature of cilium"
+  type = object({
+    version = optional(string, "1.14.3")
+    kube-proxy-replacement = optional(bool, false)
+    ebpf-hostrouting = optional(bool, false)
+    hubble = optional(bool, false)
+    hubble-ui = optional(bool, false)
+    gateway-api = optional(bool, false)
+    preflight-version = optional(string, null)
+    upgrade-compatibility = optional(string, null)
+  })
+  default = {
+    version                = "1.15.1"
+    kube-proxy-replacement = false
+    ebpf-hostrouting       = false
+    hubble                 = false
+    hubble-ui              = false
+    gateway-api            = false
+  }
+}
+
+
+variable "tags" {
+  description = "A map of tags to assign to the resources."
+  type = map(string)
+  default = {
+    Environment = "Test"
+    Project     = "AKS-Deployment"
+    ManagedBy   = "Terraform"
+  }
 }
