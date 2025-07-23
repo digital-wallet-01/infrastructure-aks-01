@@ -108,7 +108,3 @@ resource "cilium" "config" {
   version = var.cilium.version
   depends_on = [local_file.current]
 }
-
-resource "cilium_hubble" "hubble" {
-  ui = true
-}
