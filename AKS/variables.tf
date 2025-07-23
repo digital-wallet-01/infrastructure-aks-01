@@ -93,3 +93,13 @@ variable "tags" {
     ManagedBy   = "Terraform"
   }
 }
+
+variable "acr" {
+  description = "Configuration for the Azure Container Registry (ACR)."
+  type = object({
+    name = string
+  })
+  default = {
+    name = "acrtest01"
+  }
+}

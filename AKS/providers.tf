@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0" # Check the registry for the latest stable version and update accordingly
+      version = "~> 3.0"
     }
     local = {
       source  = "hashicorp/local"
@@ -27,7 +27,8 @@ provider "azurerm" {
   features {}
 }
 
-
 provider "cilium" {
   config_path = local_file.current.filename
 }
+
+
