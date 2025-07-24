@@ -103,3 +103,20 @@ variable "acr" {
     name = "acrtest01"
   }
 }
+
+variable "domain_name" {
+  description = "The root domain name for your application (e.g., example.com)."
+  type        = string
+  default = "ztsikkerhed.dk"
+}
+
+variable "domain_name_san_friendly_name" {
+  description = "A friendly name for the Key Vault secret, typically derived from the domain, e.g., 'yourdomain-com-cert'."
+  type        = string
+}
+
+variable "letsencrypt_email" {
+  description = "Email address for Let's Encrypt notifications."
+  type        = string
+  default = "fadidasus@gmail.com"
+}
