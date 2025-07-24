@@ -25,3 +25,4 @@ terraform.rc
 State/aks-backend-config.txt
 State/connections-backend-config.txt
 *.plan
+AKS/kubeconfig

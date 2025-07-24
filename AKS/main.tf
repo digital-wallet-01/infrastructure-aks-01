@@ -57,9 +57,13 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
     load_balancer_sku = "standard"
 
   }
-
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.agic_identity.id]
+  }
+
+  ingress_application_gateway {
+    gateway_id = azurerm_application_gateway.appgw.id
   }
 
   location            = var.location
@@ -86,7 +90,7 @@ resource "azurerm_container_registry" "acr" {
 resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_kubernetes_cluster.aks-cluster.identity[0].principal_id
+  principal_id         = azurerm_user_assigned_identity.agic_identity.principal_id
 }
 
 ##################################################################################
@@ -108,3 +112,114 @@ resource "cilium" "config" {
   version = var.cilium.version
   depends_on = [local_file.current]
 }
+
+
+
+
+##################################################################################
+# APPLICATION GATEWAY WAF
+##################################################################################
+
+# Subnet for Application Gateway
+resource "azurerm_subnet" "appgw_subnet" {
+  name                 = "appgw-subnet"
+  resource_group_name  = azurerm_resource_group.rg_terraform_aks.name
+  virtual_network_name = azurerm_virtual_network.aks-vnet.name
+  address_prefixes     = ["10.250.0.0/24"]
+}
+
+# Public IP for the Application Gateway
+resource "azurerm_public_ip" "appgw_pip" {
+  name                = "appgw-pip"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg_terraform_aks.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+# User-assigned identity for AGIC
+resource "azurerm_user_assigned_identity" "agic_identity" {
+  name                = "agic-identity"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg_terraform_aks.name
+}
+
+# Role assignment for AGIC to control the App Gateway
+resource "azurerm_role_assignment" "agic_appgw_contributor" {
+  scope                = azurerm_resource_group.rg_terraform_aks.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.agic_identity.principal_id
+}
+
+# Application Gateway with WAF enabled
+resource "azurerm_application_gateway" "appgw" {
+  name                = "appgw-waf"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg_terraform_aks.name
+
+  sku {
+    name     = "WAF_v2"
+    tier     = "WAF_v2"
+    capacity = 2
+  }
+
+  gateway_ip_configuration {
+    name      = "gateway-ip-config"
+    subnet_id = azurerm_subnet.appgw_subnet.id
+  }
+
+  frontend_ip_configuration {
+    name                 = "appgw-fe"
+    public_ip_address_id = azurerm_public_ip.appgw_pip.id
+  }
+
+  frontend_port {
+    name = "http"
+    port = 80
+  }
+
+  backend_address_pool {
+    name = "default-pool"
+  }
+
+  backend_http_settings {
+    name                  = "default-setting"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 30
+  }
+
+  http_listener {
+    name                           = "listener"
+    frontend_ip_configuration_name = "appgw-fe"
+    frontend_port_name             = "http"
+    protocol                       = "Http"
+  }
+
+  request_routing_rule {
+    name                       = "rule1"
+    rule_type                  = "Basic"
+    http_listener_name         = "listener"
+    backend_address_pool_name  = "default-pool"
+    backend_http_settings_name = "default-setting"
+    priority                   = 100
+  }
+
+  waf_configuration {
+    enabled          = true
+    firewall_mode    = "Prevention"
+    rule_set_type    = "OWASP"
+    rule_set_version = "3.2"
+  }
+
+  depends_on = [
+    azurerm_subnet.appgw_subnet,
+    azurerm_public_ip.appgw_pip
+  ]
+}
+
+
+
+#private cluster a
+# managment vm
