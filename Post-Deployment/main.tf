@@ -1,0 +1,1 @@
+# this will be the configuration of the cluster with the cert manager and all the thing related to that

@@ -113,6 +113,7 @@ variable "domain_name" {
 variable "domain_name_san_friendly_name" {
   description = "A friendly name for the Key Vault secret, typically derived from the domain, e.g., 'yourdomain-com-cert'."
   type        = string
+  default = "zt-cert"
 }
 
 variable "letsencrypt_email" {
