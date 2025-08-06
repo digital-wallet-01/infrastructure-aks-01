@@ -71,25 +71,24 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
   }
 
   default_node_pool {
-    name = "systempool" # This will be the initial system node pool
-    node_count = 1           # Start with a minimum count
-    vm_size = "Standard_DS2_v2" # Match your system node pool VM size
+    name           = "systempool"
+    node_count     = 1
+    vm_size        = "Standard_DS2_v2"
     vnet_subnet_id = azurerm_subnet.node-subnet.id
-    max_pods       = 60 # Match your desired system node pool max_pods
+    max_pods = 60
 
     # Enable autoscaling for the default node pool as well
     enable_auto_scaling = true
-    min_count = 1 # Keep a minimum of 1
-    max_count           = 3 # Adjust as needed
+    min_count           = 1
+    max_count           = 3
   }
 
   identity {
-    type = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.agic_identity.id]
+    type = "SystemAssigned"
   }
 
   ingress_application_gateway {
-    gateway_id = azurerm_application_gateway.appgw.id
+    gateway_id  = azurerm_application_gateway.appgw.id
   }
 
   location            = var.location
@@ -151,7 +150,10 @@ resource "azurerm_role_assignment" "agic_appgw_contributor" {
 resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.agic_identity.principal_id
+  principal_id         = azurerm_kubernetes_cluster.aks-cluster.identity[0].principal_id
+  depends_on = [
+    azurerm_kubernetes_cluster.aks-cluster # Ensure cluster is created before assigning role # consider testing without it
+  ]
 }
 
 # Azure Key Vault for storing certificates
@@ -300,32 +302,20 @@ resource "cilium" "config" {
     "azure.resourceGroup=${azurerm_resource_group.rg_terraform_aks.name}",
     "ipam.mode=cluster-pool",
     "ipam.operator.clusterPoolIPv4PodCIDRList={10.1.0.0/16}",
-    "ipam.operator.clusterPoolIPv4MaskSize=24"
+    "ipam.operator.clusterPoolIPv4MaskSize=24",
+    "tls.enabled=true",
+    # Enable automatic certificate generation for internal Cilium communication
+    "hubble.tls.enabled=true",
+    "hubble.tls.auto.enabled=true",
+    "hubble.tls.auto.method=helm"
   ]
   version = var.cilium.version
   depends_on = [local_file.current]
 }
 
-# NEW: Data source for current Azure client configuration
+#Data source for current Azure client configuration
 data "azurerm_client_config" "current" {}
 
-# NEW: Helm provider configuration for Kubernetes ()
-provider "helm" {
-  kubernetes {
-    host = azurerm_kubernetes_cluster.aks-cluster.kube_config.0.host
-    client_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_certificate)
-    client_key = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_key)
-    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.cluster_ca_certificate)
-  }
-}
-
-# NEW: Kubernetes provider configuration
-provider "kubernetes" {
-  host = azurerm_kubernetes_cluster.aks-cluster.kube_config.0.host
-  client_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_certificate)
-  client_key = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_key)
-  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.cluster_ca_certificate)
-}
 
 # cert-manager Helm chart 
 resource "helm_release" "cert_manager" {

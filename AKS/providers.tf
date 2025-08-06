@@ -28,7 +28,7 @@ terraform {
   required_version = ">= 1.8.0"
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state-01"
-    storage_account_name = "tfstatejgyxb"
+    storage_account_name = "tfstatejqkms"
     container_name       = "aks-tfstate"
     key                  = "aks-test.tfstate"
   }
@@ -40,4 +40,22 @@ provider "azurerm" {
 
 provider "cilium" {
   config_path = local_file.current.filename
+}
+
+#  Helm provider configuration for Kubernetes ()
+provider "helm" {
+  kubernetes {
+    host = azurerm_kubernetes_cluster.aks-cluster.kube_config.0.host
+    client_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_certificate)
+    client_key = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.cluster_ca_certificate)
+  }
+}
+
+#  Kubernetes provider configuration
+provider "kubernetes" {
+  host = azurerm_kubernetes_cluster.aks-cluster.kube_config.0.host
+  client_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_certificate)
+  client_key = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.client_key)
+  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks-cluster.kube_config.0.cluster_ca_certificate)
 }
