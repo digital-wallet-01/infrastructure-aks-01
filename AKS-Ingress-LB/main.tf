@@ -16,6 +16,9 @@ resource "random_string" "suffix" {
 # KUBERNETES CLUSTER RESOURCES with BYO CNI
 ##################################################################################
 resource "azurerm_kubernetes_cluster" "aks-cluster" {
+  depends_on = [
+    azurerm_public_ip.aks_static_ip
+  ]
   name                 = var.aks.name
   kubernetes_version   = var.aks.version
   azure_policy_enabled = true
@@ -30,6 +33,8 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
     network_data_plane  = "cilium"
     load_balancer_sku   = "standard"
     pod_cidr            = "10.1.0.0/16"
+    outbound_ip_address_ids = [azurerm_public_ip.aks-outbound-ip.id]
+
   }
 
   default_node_pool {
@@ -105,66 +110,3 @@ resource "local_file" "current" {
 #Data source for current Azure client configuration
 data "azurerm_client_config" "current" {}
 
-
-#
-#
-# ##################################################################################
-# # AKS Deployment and Service
-# ##################################################################################
-#
-# resource "kubernetes_deployment" "hello_nginx" {
-#   metadata {
-#     name = "hello-nginx"
-#     labels = {
-#       app = "hello-nginx"
-#     }
-#   }
-#
-#   spec {
-#     replicas = 1
-#
-#     selector {
-#       match_labels = {
-#         app = "hello-nginx"
-#       }
-#     }
-#
-#     template {
-#       metadata {
-#         labels = {
-#           app = "hello-nginx"
-#         }
-#       }
-#
-#       spec {
-#         container {
-#           name  = "nginx"
-#           image = "nginx"
-#           ports {
-#             container_port = 80
-#           }
-#         }
-#       }
-#     }
-#   }
-# }
-#
-# resource "kubernetes_service" "hello_nginx" {
-#   metadata {
-#     name = "hello-nginx"
-#   }
-#
-#   spec {
-#     selector = {
-#       app = kubernetes_deployment.hello_nginx.metadata[0].labels.app
-#     }
-#
-#     port {
-#       port        = 80
-#       target_port = 80
-#       protocol    = "TCP"
-#     }
-#
-#     type = "LoadBalancer"
-#   }
-# }

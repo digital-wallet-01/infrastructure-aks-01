@@ -20,15 +20,18 @@ terraform {
   required_version = ">= 1.8.0"
   backend "azurerm" {
     resource_group_name  = "rg-terraform-state-01"
-    storage_account_name = "tfstatejqkms"
+    storage_account_name = "tfstatet5fkr"
     container_name       = "aks-tfstate"
     key                  = "aks-test.tfstate"
   }
 }
 
-# provider "kubernetes" {
-#   config_path = local_file.current.filename
-# }
+provider "kubernetes" {
+  alias       = "aks"
+  config_path = local_file.current.filename
+}
+
+
 
 provider "azurerm" {
   features {}
