@@ -99,72 +99,29 @@ resource "local_file" "current" {
   content  = azurerm_kubernetes_cluster.aks-cluster.kube_config_raw
   filename = "${path.module}/kubeconfig"
 }
-
-
+#
+# # Cilium configuration for AKS
+# resource "cilium" "config" {
+#   set = [
+#     "aksbyocni.enabled=true",
+#     "nodeinit.enabled=true",
+#     "azure.resourceGroup=${azurerm_resource_group.rg_terraform_aks.name}",
+#     "ipam.mode=cluster-pool",
+#     "ipam.operator.clusterPoolIPv4PodCIDRList={10.1.0.0/16}",
+#     "ipam.operator.clusterPoolIPv4MaskSize=24",
+#     "tls.enabled=true",
+#     # Enable automatic certificate generation for internal Cilium communication
+#     "hubble.tls.enabled=true",
+#     "hubble.tls.auto.enabled=true",
+#     "hubble.tls.auto.method=helm"
+#   ]
+#   version = var.cilium.version
+#   depends_on = [
+#     local_file.current,
+#     azurerm_kubernetes_cluster.aks-cluster
+#   ]
+# }
 
 #Data source for current Azure client configuration
 data "azurerm_client_config" "current" {}
 
-
-#
-#
-# ##################################################################################
-# # AKS Deployment and Service
-# ##################################################################################
-#
-# resource "kubernetes_deployment" "hello_nginx" {
-#   metadata {
-#     name = "hello-nginx"
-#     labels = {
-#       app = "hello-nginx"
-#     }
-#   }
-#
-#   spec {
-#     replicas = 1
-#
-#     selector {
-#       match_labels = {
-#         app = "hello-nginx"
-#       }
-#     }
-#
-#     template {
-#       metadata {
-#         labels = {
-#           app = "hello-nginx"
-#         }
-#       }
-#
-#       spec {
-#         container {
-#           name  = "nginx"
-#           image = "nginx"
-#           ports {
-#             container_port = 80
-#           }
-#         }
-#       }
-#     }
-#   }
-# }
-#
-# resource "kubernetes_service" "hello_nginx" {
-#   metadata {
-#     name = "hello-nginx"
-#   }
-#
-#   spec {
-#     selector = {
-#       app = kubernetes_deployment.hello_nginx.metadata[0].labels.app
-#     }
-#
-#     port {
-#       port        = 80
-#       target_port = 80
-#       protocol    = "TCP"
-#     }
-#
-#     type = "LoadBalancer"
-#   }
-# }

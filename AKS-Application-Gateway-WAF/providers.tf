@@ -4,6 +4,14 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0" # Reverted to previous successful version
     }
+    # helm = {
+    #   source  = "hashicorp/helm"
+    #   version = "~> 2.11.0"
+    # }
+    # kubernetes = {
+    #   source  = "hashicorp/kubernetes"
+    #   version = "~> 2.23.0"
+    # }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
@@ -22,13 +30,9 @@ terraform {
     resource_group_name  = "rg-terraform-state-01"
     storage_account_name = "tfstatejqkms"
     container_name       = "aks-tfstate"
-    key                  = "aks-test.tfstate"
+    key                  = "aks-test-waf.tfstate"
   }
 }
-
-# provider "kubernetes" {
-#   config_path = local_file.current.filename
-# }
 
 provider "azurerm" {
   features {}
