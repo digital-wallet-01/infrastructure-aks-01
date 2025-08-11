@@ -59,3 +59,11 @@ resource "azurerm_storage_container" "terraform_aks_state_container" {
   storage_account_name  = azurerm_storage_account.terraform_state_storage.name
   container_access_type = var.container_access_type
 }
+
+
+# Container for DNS Resources State
+resource "azurerm_storage_container" "terraform_dns_state_container" {
+  name                  = var.dns_state_container_name
+  storage_account_name  = azurerm_storage_account.terraform_state_storage.name
+  container_access_type = var.container_access_type
+}

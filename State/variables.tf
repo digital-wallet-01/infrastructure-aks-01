@@ -46,6 +46,13 @@ variable "aks_state_container_name" {
   default     = "aks-tfstate" # Customize this container name
 }
 
+variable "dns_state_container_name" {
+  description = "Name of the blob container for AKS Terraform state."
+  type        = string
+  default     = "dns-tfstate" # Customize this container name
+}
+
+
 variable "container_access_type" {
   description = "Access type for the storage container."
   type        = string
