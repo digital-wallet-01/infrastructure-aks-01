@@ -1,11 +1,4 @@
 
-
-##################################################################################
-# IDENTITY RESOURCES
-##################################################################################
-
-
-
 ##################################################################################
 # ROLES AND PERMISSIONS
 ##################################################################################
@@ -21,17 +14,15 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   ]
 }
 
-resource "azurerm_role_assignment" "aks_contributor" {
-  scope                = azurerm_resource_group.rg_terraform_aks.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_kubernetes_cluster.aks-cluster.identity[0].principal_id
-  depends_on = [
-    azurerm_kubernetes_cluster.aks-cluster
-  ]
-}
-
 resource "azurerm_role_assignment" "aks_network_contributor" {
   scope                = azurerm_subnet.node-subnet.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_kubernetes_cluster.aks-cluster.identity[0].principal_id
+}
+
+# Assign Network Reader role to AKS managed identity for DNS zone access
+resource "azurerm_role_assignment" "aks_network_reader" {
+  scope                = data.azurerm_public_ip.app1_ip.id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks-cluster.identity[0].principal_id
 }

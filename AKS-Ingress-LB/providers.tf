@@ -41,3 +41,8 @@ provider "cilium" {
   config_path = local_file.current.filename
 }
 
+
+data "azurerm_public_ip" "app1_ip" {
+  name                = var.app1_public_ip_name
+  resource_group_name = var.dns-rg_name
+}

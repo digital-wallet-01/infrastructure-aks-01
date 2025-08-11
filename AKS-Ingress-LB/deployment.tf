@@ -1,13 +1,16 @@
-
-
-
 ##################################################################################
 # AKS Deployment and Service
 ##################################################################################
 
+
+
+
 resource "kubernetes_deployment" "hello_nginx" {
   provider = kubernetes.aks
-  depends_on = [local_file.current]
+  depends_on = [
+    azurerm_kubernetes_cluster.aks-cluster,
+    local_file.current,
+  ]
   metadata {
     name = "hello-nginx"
     labels = {
@@ -44,11 +47,13 @@ resource "kubernetes_deployment" "hello_nginx" {
   }
 }
 resource "kubernetes_service" "hello_nginx" {
-  provider   = kubernetes.aks
+  provider = kubernetes.aks
   metadata {
     name = "hello-nginx"
     annotations = {
-      "service.beta.kubernetes.io/azure-load-balancer-resource-group" = azurerm_resource_group.rg_terraform_aks.name
+      "service.beta.kubernetes.io/azure-load-balancer-ipv4"           = data.azurerm_public_ip.app1_ip.ip_address
+      "service.beta.kubernetes.io/azure-load-balancer-resource-group" = data.azurerm_public_ip.app1_ip.resource_group_name
+
     }
   }
 
@@ -63,12 +68,13 @@ resource "kubernetes_service" "hello_nginx" {
       protocol    = "TCP"
     }
 
-    type           = "LoadBalancer"
-    load_balancer_ip = azurerm_public_ip.aks_static_ip.ip_address
+    type = "LoadBalancer"
   }
   depends_on = [
     azurerm_kubernetes_cluster.aks-cluster,
-    azurerm_public_ip.aks_static_ip
+    local_file.current,
   ]
 
 }
+
+

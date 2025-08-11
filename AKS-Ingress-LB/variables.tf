@@ -89,3 +89,15 @@ variable "tags" {
   }
 }
 
+
+variable "app1_public_ip_name" {
+  description = "Name of the public IP for app1"
+  type        = string
+  default     = "app1-public-ip"
+}
+
+variable "dns-rg_name" {
+  description = "Resource group name for app1 public IP"
+  type        = string
+  default     = "rg-dns-test-01"
+}

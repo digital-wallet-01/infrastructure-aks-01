@@ -19,17 +19,6 @@ resource "azurerm_subnet" "node-subnet" {
   resource_group_name  = azurerm_resource_group.rg_terraform_aks.name
 }
 
-# #############################################################################
-# # 1. Create the static Public IP for AKS Load Balancer
-# #############################################################################
-resource "azurerm_public_ip" "aks_static_ip" {
-  name                = "aks-lb-ip"
-  location            = azurerm_resource_group.rg_terraform_aks.location
-  resource_group_name = azurerm_resource_group.rg_terraform_aks.name
-  allocation_method   = "Static"
-  sku                 = "Standard" # Required for AKS
-  tags                = var.tags
-}
 
 # #############################################################################
 # # 1. Create the static Public IP for AKS Outbound
