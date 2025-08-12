@@ -16,19 +16,19 @@ variable "location" {
 
 variable "vnet" {
   description = "Feature of vnet"
-  type = object({ address_space = list(string), name = string })
+  type        = object({ address_space = list(string), name = string })
   default = {
     address_space = ["10.0.0.0/8"]
-    name = "aks-vnet-01"
+    name          = "aks-vnet-01"
   }
 }
 
 variable "subnet_node" {
   description = "Feature of subnet of node"
-  type = object({ address_prefixes = list(string), name = string })
+  type        = object({ address_prefixes = list(string), name = string })
   default = {
     address_prefixes = ["10.240.0.0/16"]
-    name = "node-subnet-01"
+    name             = "node-subnet-01"
   }
 }
 
@@ -39,9 +39,9 @@ variable "aks" {
     version    = string
     dns_prefix = string
     default_node_pool = object({
-      name = optional(string, "default")
+      name       = optional(string, "default")
       node_count = optional(number, 3)
-      vm_size = optional(string, "Standard_DS2_v2")
+      vm_size    = optional(string, "Standard_DS2_v2")
     })
   })
   default = {
@@ -59,14 +59,14 @@ variable "aks" {
 variable "cilium" {
   description = "Feature of cilium"
   type = object({
-    version = optional(string, "1.14.3")
+    version                = optional(string, "1.14.3")
     kube-proxy-replacement = optional(bool, false)
-    ebpf-hostrouting = optional(bool, false)
-    hubble = optional(bool, false)
-    hubble-ui = optional(bool, false)
-    gateway-api = optional(bool, false)
-    preflight-version = optional(string, null)
-    upgrade-compatibility = optional(string, null)
+    ebpf-hostrouting       = optional(bool, false)
+    hubble                 = optional(bool, false)
+    hubble-ui              = optional(bool, false)
+    gateway-api            = optional(bool, false)
+    preflight-version      = optional(string, null)
+    upgrade-compatibility  = optional(string, null)
   })
   default = {
     version                = "1.15.1"
@@ -81,7 +81,7 @@ variable "cilium" {
 
 variable "tags" {
   description = "A map of tags to assign to the resources."
-  type = map(string)
+  type        = map(string)
   default = {
     Environment = "Test"
     Project     = "AKS-Deployment"

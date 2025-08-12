@@ -18,16 +18,3 @@ resource "azurerm_subnet" "node-subnet" {
   virtual_network_name = azurerm_virtual_network.aks-vnet.name
   resource_group_name  = azurerm_resource_group.rg_terraform_aks.name
 }
-
-
-# #############################################################################
-# # 1. Create the static Public IP for AKS Outbound
-# #############################################################################
-resource "azurerm_public_ip" "aks-outbound-ip" {
-  name                = "aks-outbound-ip"
-  location            = azurerm_resource_group.rg_terraform_aks.location
-  resource_group_name = azurerm_resource_group.rg_terraform_aks.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  tags                = var.tags
-}

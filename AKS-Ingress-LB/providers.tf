@@ -9,7 +9,7 @@ terraform {
       version = "~> 3.0"
     }
     cilium = {
-      source = "littlejo/cilium"
+      source  = "littlejo/cilium"
       version = "0.3.2"
     }
     local = {
@@ -31,8 +31,6 @@ provider "kubernetes" {
   config_path = local_file.current.filename
 }
 
-
-
 provider "azurerm" {
   features {}
 }
@@ -40,7 +38,6 @@ provider "azurerm" {
 provider "cilium" {
   config_path = local_file.current.filename
 }
-
 
 data "azurerm_public_ip" "app1_ip" {
   name                = var.app1_public_ip_name

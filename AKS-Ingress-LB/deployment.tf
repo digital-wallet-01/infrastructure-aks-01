@@ -2,14 +2,10 @@
 # AKS Deployment and Service
 ##################################################################################
 
-
-
-
 resource "kubernetes_deployment" "hello_nginx" {
   provider = kubernetes.aks
   depends_on = [
-    azurerm_kubernetes_cluster.aks-cluster,
-    local_file.current,
+    azurerm_kubernetes_cluster_node_pool.user_node_pool
   ]
   metadata {
     name = "hello-nginx"
@@ -71,8 +67,7 @@ resource "kubernetes_service" "hello_nginx" {
     type = "LoadBalancer"
   }
   depends_on = [
-    azurerm_kubernetes_cluster.aks-cluster,
-    local_file.current,
+    azurerm_kubernetes_cluster_node_pool.user_node_pool
   ]
 
 }

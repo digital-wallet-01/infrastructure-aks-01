@@ -16,24 +16,26 @@ resource "random_string" "suffix" {
 # KUBERNETES CLUSTER RESOURCES with BYO CNI
 ##################################################################################
 resource "azurerm_kubernetes_cluster" "aks-cluster" {
-  depends_on = [
-    azurerm_public_ip.aks_static_ip
-  ]
-  name                 = var.aks.name
-  kubernetes_version   = var.aks.version
-  azure_policy_enabled = true
-  dns_prefix           = var.aks.dns_prefix
+
+  name                      = var.aks.name
+  kubernetes_version        = var.aks.version
+  azure_policy_enabled      = true
+  dns_prefix                = var.aks.dns_prefix
+  automatic_channel_upgrade = "stable"
+  workload_identity_enabled = true
+  oidc_issuer_enabled       = true
+
+
   # private_cluster_enabled = true
   # private_dns_zone_id     = "System"
 
   network_profile {
-    network_plugin      = "azure"
-    network_plugin_mode = "overlay"
-    network_policy      = "cilium"
-    network_data_plane  = "cilium"
-    load_balancer_sku   = "standard"
-    pod_cidr            = "10.1.0.0/16"
-    outbound_ip_address_ids = [azurerm_public_ip.aks-outbound-ip.id]
+    network_plugin          = "azure"
+    network_plugin_mode     = "overlay"
+    network_policy          = "cilium"
+    network_data_plane      = "cilium"
+    load_balancer_sku       = "standard"
+    pod_cidr                = "10.1.0.0/16"
 
   }
 
@@ -42,9 +44,8 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
     node_count     = 1
     vm_size        = "Standard_DS2_v2"
     vnet_subnet_id = azurerm_subnet.node-subnet.id
-    max_pods = 60
+    max_pods       = 60
 
-    # Enable autoscaling for the default node pool as well
     enable_auto_scaling = true
     min_count           = 1
     max_count           = 3
@@ -53,10 +54,6 @@ resource "azurerm_kubernetes_cluster" "aks-cluster" {
   identity {
     type = "SystemAssigned"
   }
-
-  # ingress_application_gateway {
-  #   gateway_id = azurerm_application_gateway.appgw.id
-  # }
 
   location            = var.location
   resource_group_name = azurerm_resource_group.rg_terraform_aks.name
@@ -85,7 +82,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user_node_pool" {
 
 # Container Registry for storing images
 resource "azurerm_container_registry" "acr" {
-  name = "acrtest01${random_string.suffix.result}" # Globally unique name
+  name                = "acrtest01${random_string.suffix.result}" # Globally unique name
   location            = var.location
   resource_group_name = azurerm_resource_group.rg_terraform_aks.name
   sku                 = "Standard"
@@ -101,7 +98,6 @@ resource "local_file" "current" {
   content  = azurerm_kubernetes_cluster.aks-cluster.kube_config_raw
   filename = "${path.module}/kubeconfig"
 }
-
 
 
 #Data source for current Azure client configuration
